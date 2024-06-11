@@ -96,38 +96,6 @@ export default {
       deep: true
     }
   },
-  async mounted() {
-
-    // const headers = new Headers({
-    //   "X-API-Key": "sk-b9erd8cqto9savh2v59z-3da297287fc7d81a2ae5327006b325c17234040a",
-    //   "Content-Type": "application/json"
-    // });
-
-    // const response = await fetch('/api', {
-    //   method: 'POST',
-    //   headers: headers,
-    //   body: JSON.stringify(this.requestMes)
-    // });
-    // console.log(response)
-    // if (response.body) {
-
-    //   const reader = response.body.getReader();
-    //   while (true) {
-    //     const { done, value } = await reader.read();
-    //     if (done) {
-    //       break
-    //     }
-    //     // 处理接收到的数据块
-    //     var sigleData = new TextDecoder("utf-8").decode(value);
-    //     sigleData = sigleData.replace("event: message", "")
-    //     sigleData = sigleData.replace("data: ", "")
-    //     sigleData = JSON.parse(sigleData)
-    //     console.log(sigleData.content)
-    //     // 继续读取下一个数据块
-    //   }
-    // }
-  },
-
   methods: {
 
     updataknow() {
