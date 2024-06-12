@@ -1,8 +1,5 @@
 <template>
   <div class="chat-container">
-    <div class="chat-header">
-      智慧农业AI服务
-    </div>
     <div class="chat-box" ref="chatBox">
       <!-- 循环渲染消息列表 -->
       <div v-for="(msg, index) in messages" :key="index"
@@ -11,7 +8,11 @@
           <use xlink:href="#icon-S-nongye"></use>
         </svg>
         <div class="msg">
-          {{ msg.content[0].text }}
+          <div class="item" v-for="(message, index) in msg.content" :key="index">
+            <img v-if="message.type == 'file_url'" :src=message.file_url.url :alt="`图片预览 ${index}`"
+              class="message-image" />
+            <div v-else class="message-text">{{ message.text }}</div>
+          </div>
         </div>
         <svg v-if="msg.role == 'user'" aria-hidden="true">
           <use xlink:href="#icon--grinning-face"></use>
@@ -39,10 +40,10 @@
         style="margin-right: 10px;   cursor: pointer;">
         <use xlink:href="#icon-cha"></use>
       </svg>
-      <svg v-if=!inputMessage aria-hidden="true" width="35px" height="35px" style="margin-right: 10px;">
+      <svg v-if=!isButtonDisabled aria-hidden="true" width="35px" height="35px" style="margin-right: 10px;">
         <use xlink:href="#icon-tijiao-before"></use>
       </svg>
-      <svg v-else aria-hidden="true" @click="sendMessage" :disabled="isButtonDisabled" width="35px" height="35px"
+      <svg v-else aria-hidden="true" @click="sendMessage" width="35px" height="35px"
         style="margin-right: 10px;   cursor: pointer;">
         <use xlink:href="#icon-tijiao-after"></use>
       </svg>
@@ -73,11 +74,12 @@
 export default {
   data() {
     return {
+      temptImage: [],
+      isupload: false,
       imageSrcs: [],
       openknowtext: '打开知识库',
       openknow: false,
       openSetting: false,
-      isButtonDisabled: false,
       inputMessage: '',
       messages: [
       ],
@@ -88,6 +90,14 @@ export default {
         services: ["service:9hqeyufx38v3bxotb0nq", "service:i684t1ivtvhv7m919rf2"]
       }
     };
+  },
+  computed: {
+    isButtonDisabled() {
+      if ((this.imageSrcs.length === 0 && this.inputMessage === "") || this.isupload)
+        return false;
+      else
+        return true;
+    },
   },
   watch: {
     messages: {
@@ -113,124 +123,163 @@ export default {
       this.$refs.fileInput.click();
     },
     async handleFileChange(event) {
+      this.isupload = true
       // 处理文件选择后的事件
       const file = event.target.files[0];
       const reader = new FileReader();
       if (file && file.type.match('image.*')) {
+        reader.readAsDataURL(file);
         reader.onload = (e) => {
           this.imageSrcs.push(e.target.result); // 设置图片预览的src
         };
-        reader.readAsDataURL(file);
-        console.log(this.imageSrcs)
-        const res = await useFetch(`/api/presigned?name=${file.name}&type=${file.type}`, {
-        });
-        // const fileReader = new FileReader();
+        const headers = {
+          "X-API-Key": "sk-b9erd8cqto9savh2v59z-3da297287fc7d81a2ae5327006b325c17234040a",
+          "Content-Type": "application/json"
+        }
+
+        // 定义请求的body数据
+        const data = {
+          method: "PUT",
+          name: file.name
+        };
+        // 将对象转换为JSON格式的字符串
+        const body = JSON.stringify(data);
+        // 发送POST请求
+        var preres = await fetch("https://api.platform.archivemodel.cn/files/pre-signed-url", {
+          method: "POST",
+          headers: headers,
+          body: body
+        })
+        preres = await preres.json()
+        console.log(preres.url)
+        // 将图片文件转换为二进制并添加到FormData对象中
+        reader.readAsArrayBuffer(file);
         reader.onload = (e) => {
-          // 读取文件为ArrayBuffer
-          const arrayBuffer = e.target.result;
-
-          // 创建Blob对象
-          const blob = new Blob([arrayBuffer], { type: 'image/png' }); // 假设图片类型为png
-
-          // 使用fetch发送PUT请求
-          fetch(res.data._rawValue.url, {
+          const binaryData = e.target.result;
+          // 使用fetch发送POST请求
+          fetch(preres.url, {
             method: 'PUT',
-            body: blob,
+            body: binaryData,
           })
             .then(response => {
-              if (!response.ok) {
-                throw new Error('上传失败');
+              // 首先检查响应的状态码
+              if (response.ok) {
+                // 如果状态码在200-299之间，表示请求成功
+                console.log("上传成功") // 或者根据服务器返回的数据类型选择适当的方法处理响应体
+              } else {
+                // 如果状态码表示错误，抛出错误
+                throw new Error('网络错误');
               }
             })
-            .then(data => {
-              console.log("上传成功");
-            })
             .catch(error => {
-              console.error('上传出错:', error);
+              // 处理请求过程中发生的错误
+              console.error('Upload failed:', error);
             });
-          fileReader.readAsArrayBuffer(file); // 开始读取文件
         }
-        const response = await useFetch(`/api/signed?name=${file.name}&type=${file.type}&size=${file.size}&objectkey=${res.data._rawValue['object_key']}`, {
+        const datas = {
+          type: file.type,
+          name: file.name,
+          size: Number(file.size),
+          object_key: preres['object_key'],
+        };
+        var uploadres = await fetch("https://api.platform.archivemodel.cn/files", {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(datas)
         });
-        console.log(response)
+        uploadres = await uploadres.json()
+        this.temptImage.push({
+          type: "file_url",
+          file_url: {
+            mime_type: file.type,
+            name: file.name,
+            size: Number(file.size),
+            url: uploadres["pre_signed_url"]
+          }
+        })
       } else {
         alert('请选择一个图片文件！');
       }
+      this.isupload = false
     },
     removeImage(index) {
-      this.imageSrcs.splice(index, 1);
+      this.imageSrcs.splice(index, 1)
+      this.temptImage.splice(index, 1)
     },
     // 这里可以添加上传图片的方法
 
     async sendMessage() {
-      if (this.isButtonDisabled) return
-      this.isButtonDisabled = true
-      if (this.inputMessage.trim()) {
-        // 添加用户消息
-        if (this.imageSrcs) {
-
-        }
-        const headers = new Headers({
-          "X-API-Key": "sk-b9erd8cqto9savh2v59z-3da297287fc7d81a2ae5327006b325c17234040a",
-          "Content-Type": "application/json"
-        });
-        //用户页面显示
-        this.messages.push({
-          role: "user",
-          content: [{ type: "text", text: this.inputMessage }],
-        });
+      this.isupload = true
+      this.inputMessage = this.inputMessage.trim()
+      // 添加用户消息
+      const headers = new Headers({
+        "X-API-Key": "sk-b9erd8cqto9savh2v59z-3da297287fc7d81a2ae5327006b325c17234040a",
+        "Content-Type": "application/json"
+      });
+      this.messages.push({
+        role: "user",
+        content: []
+      })
+      //用户页面显示
+      if (this.temptImage.length > 0) {
+        this.messages[this.messages.length - 1].content = [...this.temptImage]
+        this.temptImage = [];
+      }
+      if (this.inputMessage !== "") {
+        this.messages[this.messages.length - 1].content.push({
+          type: "text",
+          text: this.inputMessage
+        })
         this.inputMessage = '';
-        this.$nextTick(() => {
-          this.$refs.chatBox.scrollTop = this.$refs.chatBox.scrollHeight;
-        });
-        //准备数据
-        var requestBody = this.requestMes
-        requestBody.messages = this.messages
-        if (this.openknow) requestBody.options.retrieval = true
-        //向api发请求
-        const response = await fetch('/api', {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify(requestBody)
-        });
-        this.messages.push({
-          role: "assistant",
-          content: [{ type: "text", text: "" }]
-        }); // 当前正在构建的消息
-        if (!response.ok) {
-          setTimeout(() => {
-            this.messages[this.messages.length - 1].content[0].text = "请求错误，请稍后再试！"
-            return
-          }, 1000);
+      }
+      this.imageSrcs = []
+      this.$nextTick(() => {
+        this.$refs.chatBox.scrollTop = this.$refs.chatBox.scrollHeight;
+      });
+      //准备数据
+      var requestBody = { ...this.requestMes }
+      requestBody.messages = this.messages
+      if (this.openknow) requestBody.options.retrieval = true
+      //向api发请求
+      const response = await fetch('https://api.platform.archivemodel.cn/assistants/query', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody)
+      });
+      this.messages.push({
+        role: "assistant",
+        content: [{ type: "text", text: "" }]
+      }); // 当前正在构建的消息
+      if (!response.ok) {
+        setTimeout(() => {
+          this.messages[this.messages.length - 1].content[0].text = "请求错误，请稍后再试！"
+          this.isupload = false
+          return
+        }, 1000);
+      }
+      var reContent = ""
+      const reader = response.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          this.isupload = false
+          break
         }
-        var reContent = ""
-        if (response.body) {
-
-          const reader = response.body.getReader();
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              break
-            }
-            // 处理接收到的数据块
-            var sigleData = new TextDecoder("utf-8").decode(value);
-            let lines = sigleData.split('\n');
-            lines.forEach(line => {
-              if (line.trim() && line.trim().endsWith('}')) {
-                line = line.replace('event: message', '');
-                line = line.replace("data: ", "")
-                line = JSON.parse(line);
-                reContent += line.content
-                this.messages[this.messages.length - 1].content[0].text = reContent
-                this.$nextTick(() => {
-                  this.$refs.chatBox.scrollTop = this.$refs.chatBox.scrollHeight;
-                });
-              }
+        var sigleData = new TextDecoder("utf-8").decode(value);
+        let lines = sigleData.split('\n');
+        lines.forEach(line => {
+          if (line.trim() && line.trim().endsWith('}')) {
+            line = line.replace('event: message', '');
+            line = line.replace("data: ", "")
+            line = JSON.parse(line);
+            reContent += line.content
+            this.messages[this.messages.length - 1].content[0].text = reContent
+            this.$nextTick(() => {
+              this.$refs.chatBox.scrollTop = this.$refs.chatBox.scrollHeight;
             });
           }
-        }
+        });
       }
-      this.isButtonDisabled = false
     },
 
     handleShiftEnter(event) {
@@ -260,6 +309,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: center;
+
 }
 
 /* 聊天头部固定在顶部 */
@@ -290,6 +340,7 @@ export default {
     margin: 10px;
 
     .msg {
+
       display: inline-block;
       padding: 10px;
       word-wrap: anywhere;
@@ -336,6 +387,14 @@ export default {
 
   /* IE and Edge */
 }
+
+
+
+.message-image {
+  width: 200px;
+  /* 根据需要调整图片大小 */
+}
+
 
 /* 聊天输入区域固定在底部 */
 .chat-input {

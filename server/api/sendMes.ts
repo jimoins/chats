@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     // 将对象转换为JSON格式的字符串
     // try {
 
-    const response = await fetch("https://platform.archivemodel.cn/_api/assistants/query", {
+    const response = await fetch("https://api.platform.archivemodel.cn/assistants/query", {
         method: "POST",
         headers: headers,
         body: body

@@ -1,17 +1,11 @@
-
 export default defineNuxtConfig({
-  devtools: { enabled: true },
-  // devServer: {
-  //   port: 3000, // 你的开发服务器端口
-  // },
+  devtools: { enabled: false },
+  devServer: {
+    host: '0.0.0.0',
+    port: 3000, // 你的开发服务器端口
+  },
   nitro: {
-    devProxy: {
-      "/api": {
-        target: "http://localhost:8000", // 这里是接口地址
-        changeOrigin: true,
-        prependPath: true,
-      },
-    },
+
   },
   app: {
     head: {
@@ -19,10 +13,6 @@ export default defineNuxtConfig({
       meta: [
         {
           charset: "utf-8"
-        },
-        {
-          "http-equiv": "X-UA-Compatible",
-          content: "IE=edge"
         },
         {
           name: "viewport",
@@ -42,17 +32,6 @@ export default defineNuxtConfig({
         { src: "//at.alicdn.com/t/c/font_4434738_nlpk8afwsy.js" }
 
       ]
-    },
-  },
-  vite: {
-    server: {
-      proxy: {
-        '/api': {
-          target: 'https://platform.archivemodel.cn/_api/assistants/query',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
-        }
-      }
     }
   }
 })

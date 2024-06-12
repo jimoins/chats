@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         // 发送POST请求
-        const response = await fetch("https://platform.archivemodel.cn/_api/files/pre-signed-url", {
+        const response = await fetch("https://api.platform.archivemodel.cn/files/pre-signed-url", {
             method: "POST",
             headers: headers,
             body: body
