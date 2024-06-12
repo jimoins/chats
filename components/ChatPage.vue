@@ -170,8 +170,6 @@ export default {
         if (this.imageSrcs) {
 
         }
-        // 清空输入框
-        this.inputMessage = '';
         const headers = new Headers({
           "X-API-Key": "sk-b9erd8cqto9savh2v59z-3da297287fc7d81a2ae5327006b325c17234040a",
           "Content-Type": "application/json"
@@ -181,6 +179,7 @@ export default {
           role: "user",
           content: [{ type: "text", text: this.inputMessage }],
         });
+        this.inputMessage = '';
         this.$nextTick(() => {
           this.$refs.chatBox.scrollTop = this.$refs.chatBox.scrollHeight;
         });
