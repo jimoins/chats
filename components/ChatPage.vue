@@ -156,7 +156,6 @@ export default {
         reader.readAsArrayBuffer(file);
         reader.onload = (e) => {
           const binaryData = e.target.result;
-          // 使用fetch发送POST请求
           fetch(preres.url, {
             method: 'PUT',
             body: binaryData,

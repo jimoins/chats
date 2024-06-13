@@ -29,8 +29,7 @@ export default defineNuxtConfig({
       ],
       link: [],
       script: [
-        { src: "//at.alicdn.com/t/c/font_4434738_nlpk8afwsy.js" }
-
+        { src: "font/iconfont.js" }
       ]
     }
   }
