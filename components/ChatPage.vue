@@ -340,7 +340,7 @@ export default {
     margin: 10px;
 
     .msg {
-
+      margin-left: 10px;
       display: inline-block;
       padding: 10px;
       word-wrap: anywhere;
@@ -375,6 +375,7 @@ export default {
     }
 
     .msg {
+      margin-right: 10px;
       display: inline-block;
       padding: 10px;
       word-wrap: anywhere;
