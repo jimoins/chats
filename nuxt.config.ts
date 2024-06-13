@@ -4,9 +4,6 @@ export default defineNuxtConfig({
     host: '0.0.0.0',
     port: 3000, // 你的开发服务器端口
   },
-  nitro: {
-
-  },
   app: {
     head: {
       title: '',
