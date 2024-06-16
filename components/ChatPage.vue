@@ -398,7 +398,6 @@ export default {
 
 /* 聊天输入区域固定在底部 */
 .chat-input {
-
   flex: 0 1 auto;
   // padding: 5px;
   height: 45px;
