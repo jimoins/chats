@@ -31,7 +31,7 @@
     </div>
     <div class="chat-input">
       <input type="text" v-model="inputMessage" placeholder="Enter发送，Shift + Enter换行"
-        @keyup.shift.enter="handleShiftEnter" @keyup.enter.exact="sendMessage" class="input-message" />
+        @keyup.shift.enter="handleShiftEnter" class="input-message" />
       <svg v-if=!openSetting aria-hidden="true" @click="updataSetting" width="35px" height="35px"
         style="margin-right: 10px;   cursor: pointer;">
         <use xlink:href="#icon-tianjia-"></use>
@@ -123,7 +123,6 @@ export default {
       this.$refs.fileInput.click();
     },
     async handleFileChange(event) {
-      this.isupload = true
       // 处理文件选择后的事件
       const file = event.target.files[0];
       const reader = new FileReader();
@@ -199,7 +198,6 @@ export default {
       } else {
         alert('请选择一个图片文件！');
       }
-      this.isupload = false
     },
     removeImage(index) {
       this.imageSrcs.splice(index, 1)
