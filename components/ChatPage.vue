@@ -11,7 +11,10 @@
           <div class="item" v-for="(message, index) in msg.content" :key="index">
             <img v-if="message.type == 'file_url'" :src=message.file_url.url :alt="`图片预览 ${index}`"
               class="message-image" />
-            <div v-else class="message-text">{{ message.text }}</div>
+            <!-- {{ message.text }} -->
+            <div v-else class="message-text">
+              <div v-html="htmlContent(message.text)" class="marked-text"></div>
+            </div>
           </div>
         </div>
         <svg v-if="msg.role == 'user'" aria-hidden="true">
@@ -30,7 +33,7 @@
       </div>
     </div>
     <div class="chat-input">
-      <input type="text" v-model="inputMessage" placeholder="Enter发送，Shift + Enter换行"
+      <input type="text" v-model="inputMessage" @keyup.enter="sendMessage" placeholder="Enter发送，Shift + Enter换行"
         @keyup.shift.enter="handleShiftEnter" class="input-message" />
       <svg v-if=!openSetting aria-hidden="true" @click="updataSetting" width="35px" height="35px"
         style="margin-right: 10px;   cursor: pointer;">
@@ -43,7 +46,7 @@
       <svg v-if=!isButtonDisabled aria-hidden="true" width="35px" height="35px" style="margin-right: 10px;">
         <use xlink:href="#icon-tijiao-before"></use>
       </svg>
-      <svg v-else aria-hidden="true" @click="sendMessage" width="35px" height="35px"
+      <svg v-else aria-hidden="true" :disabled=!isButtonDisabled @click="sendMessage" width="35px" height="35px"
         style="margin-right: 10px;   cursor: pointer;">
         <use xlink:href="#icon-tijiao-after"></use>
       </svg>
@@ -71,6 +74,7 @@
 </template>
 
 <script>
+import * as marked from 'marked';
 export default {
   data() {
     return {
@@ -83,12 +87,19 @@ export default {
       inputMessage: '',
       messages: [
       ],
-      requestMes: {
-        knowledge: "1797517354603782144",
-        llm: { model: "glm-4", system_prompt: "", temperature: 0.95, top_p: 0.7 },
-        options: {},
-        services: ["service:9hqeyufx38v3bxotb0nq", "service:i684t1ivtvhv7m919rf2"]
-      }
+      knowledge: '',
+      requestMes: {}
+    };
+  },
+  created() {
+    // 确保组件创建后，data属性已经定义好
+    const runtimeConfig = useRuntimeConfig();
+    this.knowledge = runtimeConfig.public.knowledge
+    this.requestMes = {
+      knowledge: this.knowledge,
+      llm: { model: "glm-4", system_prompt: "回答中不要出现“根据文档”或者“来自文档”之类的词", temperature: 0.95, top_p: 0.7 },
+      options: {},
+      services: ["service:9hqeyufx38v3bxotb0nq", "service:i684t1ivtvhv7m919rf2"]
     };
   },
   computed: {
@@ -97,7 +108,7 @@ export default {
         return false;
       else
         return true;
-    },
+    }
   },
   watch: {
     messages: {
@@ -107,7 +118,13 @@ export default {
     }
   },
   methods: {
-
+    htmlContent(markdownText) {
+      return marked.marked(markdownText, {
+        gfm: true,
+        breaks: true,
+        sanitize: true, // 启用或关闭HTML清理
+      });
+    },
     updataknow() {
       this.openknow = !this.openknow
       if (this.openknow)
@@ -124,6 +141,8 @@ export default {
     },
     async handleFileChange(event) {
       // 处理文件选择后的事件
+      this.isupload = true
+      const runtimeConfig = useRuntimeConfig();
       const file = event.target.files[0];
       const reader = new FileReader();
       if (file && file.type.match('image.*')) {
@@ -132,7 +151,7 @@ export default {
           this.imageSrcs.push(e.target.result); // 设置图片预览的src
         };
         const headers = {
-          "X-API-Key": "sk-b9erd8cqto9savh2v59z-3da297287fc7d81a2ae5327006b325c17234040a",
+          "X-API-Key": runtimeConfig.public.apikey,
           "Content-Type": "application/json"
         }
 
@@ -144,13 +163,12 @@ export default {
         // 将对象转换为JSON格式的字符串
         const body = JSON.stringify(data);
         // 发送POST请求
-        var preres = await fetch("https://api.platform.archivemodel.cn/files/pre-signed-url", {
+        var preres = await fetch(runtimeConfig.public.baseURL + "/files/pre-signed-url", {
           method: "POST",
           headers: headers,
           body: body
         })
         preres = await preres.json()
-        console.log(preres.url)
         // 将图片文件转换为二进制并添加到FormData对象中
         reader.readAsArrayBuffer(file);
         reader.onload = (e) => {
@@ -180,7 +198,7 @@ export default {
           size: Number(file.size),
           object_key: preres['object_key'],
         };
-        var uploadres = await fetch("https://api.platform.archivemodel.cn/files", {
+        var uploadres = await fetch(runtimeConfig.public.baseURL + "/files", {
           method: "POST",
           headers: headers,
           body: JSON.stringify(datas)
@@ -198,6 +216,7 @@ export default {
       } else {
         alert('请选择一个图片文件！');
       }
+      this.isupload = false
     },
     removeImage(index) {
       this.imageSrcs.splice(index, 1)
@@ -206,11 +225,13 @@ export default {
     // 这里可以添加上传图片的方法
 
     async sendMessage() {
+      if (!this.isButtonDisabled) return
       this.isupload = true
       this.inputMessage = this.inputMessage.trim()
       // 添加用户消息
+      const runtimeConfig = useRuntimeConfig();
       const headers = new Headers({
-        "X-API-Key": "sk-b9erd8cqto9savh2v59z-3da297287fc7d81a2ae5327006b325c17234040a",
+        "X-API-Key": runtimeConfig.public.apikey,
         "Content-Type": "application/json"
       });
       this.messages.push({
@@ -237,8 +258,10 @@ export default {
       var requestBody = { ...this.requestMes }
       requestBody.messages = this.messages
       if (this.openknow) requestBody.options.retrieval = true
+      else if (!this.openknow && 'retrieval' in requestBody.options)
+        delete requestBody.options.retrieval
       //向api发请求
-      const response = await fetch('https://api.platform.archivemodel.cn/assistants/query', {
+      const response = await fetch(runtimeConfig.public.baseURL + "/assistants/query", {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(requestBody)

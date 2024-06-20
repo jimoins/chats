@@ -26,8 +26,16 @@ export default defineNuxtConfig({
       ],
       link: [],
       script: [
-        { src: "font/iconfont.js" }
+        { src: "font/iconfont.js" },
+
       ]
+    }
+  },
+  runtimeConfig: {
+    public: {
+      apikey: process.env.PUBLIC_API_KEY,
+      baseURL: process.env.PUBLIC_API_URL,// 
+      knowledge: process.env.PUBLIC_API_KNOWLEDGE
     }
   }
 })

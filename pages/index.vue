@@ -2,8 +2,9 @@
     <ChatPage></ChatPage>
 </template>
 
-<script setup lang='ts'>
+<script>
 import ChatPage from '../components/ChatPage.vue'
+
 </script>
 <style>
 html,
@@ -14,6 +15,11 @@ body,
     padding: 0;
     margin: 0;
     overflow: hidden;
+}
+
+p {
+    margin-top: 0;
+    margin-bottom: 8px;
 }
 
 #__nuxt {
