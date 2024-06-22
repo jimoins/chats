@@ -80,6 +80,7 @@ export default {
     return {
       temptImage: [],
       isupload: false,
+      isuploadfile: false,
       imageSrcs: [],
       openknowtext: '打开知识库',
       openknow: false,
@@ -97,14 +98,14 @@ export default {
     this.knowledge = runtimeConfig.public.knowledge
     this.requestMes = {
       knowledge: this.knowledge,
-      llm: { model: "glm-4", system_prompt: "回答中不要出现“根据文档”或者“来自文档”之类的词", temperature: 0.95, top_p: 0.7 },
+      llm: { model: "glm-4-0520", system_prompt: "回答中不要出现“根据文档”或者“来自文档”之类的词", temperature: 0.95, top_p: 0.7 },
       options: {},
       services: ["service:9hqeyufx38v3bxotb0nq", "service:i684t1ivtvhv7m919rf2"]
     };
   },
   computed: {
     isButtonDisabled() {
-      if ((this.imageSrcs.length === 0 && this.inputMessage === "") || this.isupload)
+      if ((this.imageSrcs.length === 0 && this.inputMessage === "") || this.isupload || this.isuploadfile)
         return false;
       else
         return true;
@@ -141,7 +142,7 @@ export default {
     },
     async handleFileChange(event) {
       // 处理文件选择后的事件
-      this.isupload = true
+      this.isuploadfile = true
       const runtimeConfig = useRuntimeConfig();
       const file = event.target.files[0];
       const reader = new FileReader();
@@ -216,7 +217,7 @@ export default {
       } else {
         alert('请选择一个图片文件！');
       }
-      this.isupload = false
+      this.isuploadfile = false
     },
     removeImage(index) {
       this.imageSrcs.splice(index, 1)
