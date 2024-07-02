@@ -11,7 +11,6 @@
           <div class="item" v-for="(message, index) in msg.content" :key="index">
             <img v-if="message.type == 'file_url'" :src=message.file_url.url :alt="`图片预览 ${index}`"
               class="message-image" />
-            <!-- {{ message.text }} -->
             <div v-else class="message-text">
               <div v-html="htmlContent(message.text)" class="marked-text"></div>
             </div>
@@ -60,6 +59,13 @@
         </svg>
         <span>上传图片</span>
       </div>
+      <div class="middle">
+        <select name="knowledge" id="">
+          <option value="crisp_plum">脆李</option>
+          <option value="orange">柑橘</option>
+        </select>
+        <span>{{ knowledgetext }}</span>
+      </div>
       <div class="rightbox">
         <svg v-if=openknow @click="updataknow" aria-hidden="true" width="25px" height="25px" style="  cursor: pointer;">
           <use xlink:href="#icon-zhishiku-open"></use>
@@ -78,6 +84,7 @@ import * as marked from 'marked';
 export default {
   data() {
     return {
+      knowledgetext: "脆李",
       temptImage: [],
       isupload: false,
       isuploadfile: false,
@@ -98,7 +105,7 @@ export default {
     this.knowledge = runtimeConfig.public.knowledge
     this.requestMes = {
       knowledge: this.knowledge,
-      llm: { model: "glm-4-0520", system_prompt: "回答中不要出现“根据文档”或者“来自文档”之类的词", temperature: 0.95, top_p: 0.7 },
+      llm: { model: "glm-4-air", system_prompt: "回答中不要出现”根据文档“这些字。", temperature: 0.95, top_p: 0.7 },
       options: {},
       services: ["service:9hqeyufx38v3bxotb0nq", "service:i684t1ivtvhv7m919rf2"]
     };
@@ -452,19 +459,34 @@ export default {
 .upload {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   color: white;
 }
 
 // ::-webkit-scrollbar {
 // display: none;
 // }
+
 .rightbox,
-.leftbox {
-  margin: 0 50px;
+.leftbox,
+.middle {
+  margin: 0;
   font-size: 12px;
 }
 
+.middle select {
+  background-color: #45454e;
+  border-radius: 10px;
+  color: white;
+  height: 40px;
+  width: 40px;
+}
+
+.middle option {
+  height: 10px;
+}
+
+.middle span,
 .rightbox span,
 .leftbox span {
   display: block;
