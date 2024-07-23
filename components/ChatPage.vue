@@ -60,11 +60,12 @@
         <span>上传图片</span>
       </div>
       <div class="middle">
-        <select name="knowledge" id="">
-          <option value="crisp_plum">脆李</option>
-          <option value="orange">柑橘</option>
+        <select name="knowledge" v-model="knowledge">
+          <option v-for="knowledges in knowledgeselect" :key="knowledges.value" :value="knowledges.value">
+            {{ knowledges.name }}
+          </option>
         </select>
-        <span>{{ knowledgetext }}</span>
+        <span>选择品种</span>
       </div>
       <div class="rightbox">
         <svg v-if=openknow @click="updataknow" aria-hidden="true" width="25px" height="25px" style="  cursor: pointer;">
@@ -84,7 +85,7 @@ import * as marked from 'marked';
 export default {
   data() {
     return {
-      knowledgetext: "脆李",
+      knowledgeselect: null,
       temptImage: [],
       isupload: false,
       isuploadfile: false,
@@ -95,22 +96,24 @@ export default {
       inputMessage: '',
       messages: [
       ],
-      knowledge: '',
-      requestMes: {}
+      knowledge: "",
     };
   },
   created() {
     // 确保组件创建后，data属性已经定义好
     const runtimeConfig = useRuntimeConfig();
-    this.knowledge = runtimeConfig.public.knowledge
-    this.requestMes = {
-      knowledge: this.knowledge,
-      llm: { model: "glm-4-air", system_prompt: "回答中不要出现”根据文档“这些字。", temperature: 0.95, top_p: 0.7 },
-      options: {},
-      services: ["service:9hqeyufx38v3bxotb0nq", "service:i684t1ivtvhv7m919rf2"]
-    };
+    this.knowledgeselect = JSON.parse(runtimeConfig.public.knowledge)
+    this.knowledge = this.knowledgeselect[0].value;
   },
   computed: {
+    requestMes() {
+      return {
+        knowledge: this.knowledge,
+        llm: { model: "glm-4-air", system_prompt: "回答中不要出现”根据文档“这些字。", temperature: 0.95, top_p: 0.7 },
+        options: {},
+        services: ["service:9hqeyufx38v3bxotb0nq", "service:i684t1ivtvhv7m919rf2"]
+      }
+    },
     isButtonDisabled() {
       if ((this.imageSrcs.length === 0 && this.inputMessage === "") || this.isupload || this.isuploadfile)
         return false;
@@ -463,9 +466,6 @@ export default {
   color: white;
 }
 
-// ::-webkit-scrollbar {
-// display: none;
-// }
 
 .rightbox,
 .leftbox,
@@ -475,22 +475,28 @@ export default {
 }
 
 .middle select {
+  display: flex;
+  margin: 0 auto !important;
   background-color: #45454e;
   border-radius: 10px;
+  align-items: center;
+  font-size: 18px;
   color: white;
   height: 40px;
   width: 40px;
+  appearance: none;
+  /* 移除默认的样式 */
+  -webkit-appearance: none;
+  /* 针对webkit内核的浏览器 */
+  -moz-appearance: none;
+  /* 针对Firefox */
 }
 
-.middle option {
-  height: 10px;
-}
 
 .middle span,
 .rightbox span,
 .leftbox span {
   display: block;
-  margin-bottom: 10px;
   margin-bottom: 30px;
 }
 
