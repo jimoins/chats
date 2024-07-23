@@ -475,12 +475,12 @@ export default {
 }
 
 .middle select {
+  text-align: center;
   display: flex;
   margin: 0 auto !important;
   background-color: #45454e;
   border-radius: 10px;
-  align-items: center;
-  font-size: 18px;
+  font-size: 14px;
   color: white;
   height: 40px;
   width: 40px;
